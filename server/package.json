@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "diff-match-patch": "^1.0.5",
     "express": "^4.21.2"
   }
 }
