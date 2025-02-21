@@ -30,14 +30,23 @@ app.post('/', async (req, res) => {
 
     //store subsequent changes to the dom. We get patches, that we can apply to the last stored DOM state
     if (req.body.type === 'patch') {
-      const updated_dom = dmp.patch_apply(dmp.patch_fromText(req.body.data), previousDomState);
+      const patch_list = dmp.patch_fromText(req.body.data);
+
+      if (!patch_list.length) {
+        console.log('no patches found, ignoring');
+        return res.status(400).json({ message: "no patches were found" });
+      }
+
+      const [updated_dom, appliedPatches] = dmp.patch_apply(patch_list, previousDomState);
+
+      console.log('patches appllied successfully', appliedPatches);
+
       previousDomState = updated_dom;
       console.log('writing to file');
-      console.log('updated_dom: ', updated_dom);
       await fs.writeFile(path.join(snapshotsDirPath, `snapshot-${Date.now()}.html`), updated_dom, 'utf8');
     }
 
-    res.json({ message: `Recieved ${req.body}` });
+    res.json({ message: `Recieved ${req.body.type}` });
   } catch (err) {
     console.log(err);
     res.json({ message: err });
