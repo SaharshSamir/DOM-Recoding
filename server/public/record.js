@@ -1,22 +1,31 @@
 (async function main() {
+
   const { diff_match_patch } = await import("https://cdn.jsdelivr.net/npm/diff-match-patch/+esm");
 
   const dmp = new diff_match_patch();
   const xhr = new XMLHttpRequest();
 
+  //store the original state of the dom
   let prevDomState = document.documentElement.outerHTML;
   const originalDomStatePayload = {
     type: "original-state",
     data: prevDomState
   }
+  //and send it to the server (original-state.html is made)
   xhr.open('POST', "http://localhost:1212")
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.send(JSON.stringify(originalDomStatePayload));
 
+  //start observing changes
   const observer = new MutationObserver((mutationList) => {
+    console.log('mutation list: ', mutationList);
     const currentDom = document.documentElement.outerHTML;
+
+    if (currentDom === prevDomState) return;
+
     //get diff
     const diff = dmp.diff_main(prevDomState, currentDom);
+    console.log('diff here: ', diff);
 
     // If no real change, do nothing
     if (diff.length === 1 && diff[0][0] === 0) {
@@ -38,6 +47,7 @@
     }
 
     if (patch_list.length > 0) {
+      console.log('patches found: ', patch_list);
       const patchPayload = {
         type: "patch",
         data: patch_text

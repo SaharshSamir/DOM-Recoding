@@ -10,6 +10,8 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Set limit to 10MB
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 app.get('/', (_req, res) => {
   console.log('Hello World!');
   res.json({ message: 'Hello World!' });
@@ -18,6 +20,7 @@ app.get('/', (_req, res) => {
 let previousDomState = "";
 
 app.post('/', async (req, res) => {
+  console.log('recieved request');
   try {
     const snapshotsDirPath = path.join(process.cwd(), 'snapshots');
     await fs.mkdir(snapshotsDirPath, { recursive: true });
@@ -39,11 +42,12 @@ app.post('/', async (req, res) => {
 
       const [updated_dom, appliedPatches] = dmp.patch_apply(patch_list, previousDomState);
 
-      console.log('patches appllied successfully', appliedPatches);
+      console.log('patches appllied successfully', appliedPatches, JSON.stringify(patch_list, null, 2));
 
       previousDomState = updated_dom;
       console.log('writing to file');
-      await fs.writeFile(path.join(snapshotsDirPath, `snapshot-${Date.now()}.html`), updated_dom, 'utf8');
+      const sanitizedDom = updated_dom.replace(/<script.*?>.*?<\/script>/g, '');
+      await fs.writeFile(path.join(snapshotsDirPath, `snapshot-${Date.now()}.html`), sanitizedDom, 'utf8');
     }
 
     res.json({ message: `Recieved ${req.body.type}` });
