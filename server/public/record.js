@@ -18,26 +18,10 @@
 
   //start observing changes
   const observer = new MutationObserver((mutationList) => {
-    console.log('mutation list: ', mutationList);
     const currentDom = document.documentElement.outerHTML;
 
     if (currentDom === prevDomState) return;
 
-    //get diff
-    const diff = dmp.diff_main(prevDomState, currentDom);
-    console.log('diff here: ', diff);
-
-    // If no real change, do nothing
-    if (diff.length === 1 && diff[0][0] === 0) {
-      return; // No significant changes
-    }
-
-    //cleanup diff
-    if (diff.length > 2) {
-      dmp.diff_cleanupSemantic(diff);
-    }
-
-    //get patches
     // Generate patches
     const patch_list = dmp.patch_make(prevDomState, currentDom);
     const patch_text = dmp.patch_toText(patch_list);
